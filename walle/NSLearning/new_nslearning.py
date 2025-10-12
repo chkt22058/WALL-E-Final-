@@ -100,16 +100,21 @@ def New_NSLearning(real_trajectory, predicted_trajectory, outdir, task_name):
 
     # stage3: コードルールの作成
     # ====================================================================================================
+    is_available_rule = False
 
     stage3 = STAGE3(model="gpt-4.1")
 
     with open(AR_imp_file_name, "r", encoding="utf-8") as f:
         action_rules = json.load(f)
     
-    code_rule = stage3.generate_coderule(action_rules, input_dir)
+    count = 0
+    while not is_available_rule:
+        print("コードルールリプランカウント:", count)
+        code_rule = stage3.generate_coderule(action_rules, input_dir)
+        is_available_rule = stage3.verify_code_rule_boolean(code_rule)
+        count += 1
     
     CR_file_name = os.path.join(output_dir, "code_rules.py")
-
     stage3.save(CR_file_name, code_rule)
     
     print("===LLMが生成したコードルール===")

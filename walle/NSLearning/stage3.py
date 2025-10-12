@@ -223,6 +223,65 @@ given rules：
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
     
+    # ===========================================================================
+
+    def verify_code_rule_boolean(self, code_rule: str, model: str = "gpt-3.5-turbo") -> bool:
+
+        if self.client is None:
+            print("[CodeRule] Error: OpenAI client is not available. Cannot generate action.")
+
+        # プロンプト ===================================================================
+        system_prompt = textwrap.dedent("""
+You are a strict Python code validator.
+Check whether the following string is a valid, executable Python code.
+
+If the code can be executed without syntax or import errors, output exactly "True".
+If the code cannot be executed due to any errors, output exactly "False".
+
+Do not explain or add any text other than "True" or "False".
+        """)
+        
+        header = textwrap.dedent("""
+--- CODE START ---
+        """)
+
+        user_prompt = header + str(code_rule)
+
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+
+        # プロンプトのログ残す用
+        # ========================================================
+        log_text = "--- System Prompt ---\n"
+        log_text += system_prompt + "\n\n"
+        
+        for msg in messages[1:]:
+            log_text += f"--- {msg['role'].capitalize()} ---\n"
+            log_text += msg['content'] + "\n\n"
+        # ========================================================
+
+        parent_dir = "./Code_Check"
+        os.makedirs(parent_dir, exist_ok=True) 
+        file_path = os.path.join(parent_dir, "check_prompt.txt")
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(log_text)
+
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=messages,
+            max_tokens=2000,
+            temperature=0,
+        )
+
+        result = response.choices[0].message.content.strip()
+        print(f"=== LLM Verification Result: {result} ===")
+
+        return result.strip().lower() == "true"
+
+    # ===========================================================================
+
 
     def save(self, path, data):
         with open(path, 'w', encoding='utf-8') as f:
