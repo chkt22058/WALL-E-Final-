@@ -1,3 +1,21 @@
+# 実験方法
+"""
+# 全タスクを昇順実行（A1→A2→...→F5）
+python test.py ./results --all
+
+# 単一タスク
+python test.py ./results --task A1
+
+# 複数タスク指定
+python test.py ./results --tasks A1 B2 C3
+
+# グループ内からランダム
+python test.py ./results --group Examine_in_Light --random_per_group 3
+
+# 全グループから1つずつ
+python test.py ./results --random_all_groups
+"""
+
 import os
 import random
 import openai
