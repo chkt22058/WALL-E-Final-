@@ -81,3 +81,19 @@ class SceneGraph:
         }
         with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
+    
+    def to_dict(self):
+        """
+        現在のシーングラフを辞書形式 (Rule_26_takeが期待する形式) で返します。
+        """
+        data = {
+            "nodes": [
+                {"id": n, "type": self.graph.nodes[n].get("type")}
+                for n in self.graph.nodes
+            ],
+            "edges": [
+                {"source": u, "target": v, "relation": d.get("relation")}
+                for u, v, d in self.graph.edges(data=True)
+            ],
+        }
+        return data # 辞書を返す
