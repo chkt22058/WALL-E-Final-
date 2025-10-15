@@ -212,13 +212,12 @@ given rules：
         except openai.RateLimitError:
             print("[CodeRule] OpenAI API rate limit exceeded. Waiting 5 seconds...")
             time.sleep(5)
-            return self.generate_KnowledgeGraph(transitions_data)
 
         except openai.APIStatusError as e:
             print(f"[CodeRule] OpenAI API status error: {e.status_code} - {e.response}")
 
         except json.JSONDecodeError:
-            print(f"[CodeRule] JSON decode error from LLM response: {content}")
+            print(f"[CodeRule] JSON decode error from LLM response")
     
         except Exception as e:
             print(f"An unexpected error occurred: {e}")

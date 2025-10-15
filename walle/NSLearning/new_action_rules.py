@@ -26,14 +26,14 @@ class ActionRules:
         if self.client is None:
             print("[LLMAgent] Warning: OpenAI client is not initialized. LLM calls will fail.")
 
-    def generate_ActionRules(self, transitions_data, input_dir, output_dir):
+    def generate_ActionRules(self, transitions_data, input_dir, All_AR_dir):
        
         if self.client is None:
             print("[ActionRules] Error: OpenAI client is not available. Cannot generate action.")
         
         # 前回まで作成していたアクションルールがあればセット!
         existing_action_rules = []
-        improve_path = os.path.join(output_dir, "action_rules_improve.json")
+        improve_path = os.path.join(All_AR_dir, "all_action_rules.json")
         if os.path.exists(improve_path):
             with open(improve_path, "r", encoding="utf-8") as f:
                 existing_action_rules = json.load(f)
@@ -135,7 +135,7 @@ and an array of rules:
             print(f"[ActionRules] OpenAI API status error: {e.status_code} - {e.response}")
 
         except json.JSONDecodeError:
-            print(f"[ActionRules] JSON decode error from LLM response: {content}")
+            print(f"[ActionRules] JSON decode error from LLM response")
     
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
@@ -315,7 +315,7 @@ given rules：
             print(f"[ActionRules] OpenAI API status error: {e.status_code} - {e.response}")
 
         except json.JSONDecodeError:
-            print(f"[ActionRules] JSON decode error from LLM response: {content}")
+            print(f"[ActionRules] JSON decode error from LLM response")
     
         except Exception as e:
             print(f"An unexpected error occurred: {e}")

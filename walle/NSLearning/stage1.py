@@ -18,13 +18,9 @@ def implement_stage1(traj_real, traj_pred, task_name="unknown_task"):
 
         # 成功/失敗の一致によって分類
         if real_success == predicted_success:
-            D_cor[task_name][str(i)] = {
-                "real_transitions": real_transition
-            }
+            D_cor[task_name][str(i)] = real_transition
         else:
-            D_inc[task_name][str(i)] = {
-                "real_transitions": real_transition
-            }
+            D_inc[task_name][str(i)] = real_transition
 
     return D_cor, D_inc
 

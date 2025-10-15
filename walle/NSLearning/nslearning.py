@@ -19,7 +19,7 @@ from .stage4 import *
 from networkx.readwrite import json_graph
 
 
-def New_NSLearning(real_trajectory, predicted_trajectory, outdir, task_name):
+def NSLearning(real_trajectory, predicted_trajectory, outdir):
     coderule_dir = os.path.join(outdir, "CodeRule")
     os.makedirs(coderule_dir, exist_ok=True)
 
@@ -32,17 +32,15 @@ def New_NSLearning(real_trajectory, predicted_trajectory, outdir, task_name):
 
     # RealTrajectory t-k:k
     # ====================================================================================================
-    k = 3
+    k = 5
     TopK_real_trajectory = get_recent_history_dict(real_trajectory, k)
+    print("TopK確認")
+    print(json.dumps(TopK_real_trajectory, ensure_ascii=False, indent=4))
     # ====================================================================================================
 
     # Stage1
     # ====================================================================================================
-    # 既存D_incorrectのパス
-    all_D_inc_path = "./CodeRule/all_D_inc.json"
-    os.makedirs(os.path.dirname(all_D_inc_path), exist_ok=True)
-
-    D_cor, D_inc = implement_stage1(real_trajectory, predicted_trajectory, task_name)
+    D_cor, D_inc = implement_stage1(real_trajectory, predicted_trajectory)
 
     Dcor_file_name = os.path.join(check_dir, "D_cor.json")
     with open(Dcor_file_name, "w", encoding="utf-8") as f:
@@ -51,46 +49,30 @@ def New_NSLearning(real_trajectory, predicted_trajectory, outdir, task_name):
     Dinc_file_name = os.path.join(check_dir, "D_inc.json")
     with open(Dinc_file_name, "w", encoding="utf-8") as f:
         json.dump(D_inc, f, indent=4, ensure_ascii=False)
-    
 
-    if os.path.exists(all_D_inc_path):
-        with open(all_D_inc_path, "r", encoding="utf-8") as f:
-            existing = json.load(f)
-    else:
-        existing = {} 
+    #with open("./CodeRule/check/D_cor.json", "w", encoding="utf-8") as f:
+    #    json.dump(D_cor, f, indent=4, ensure_ascii=False)
 
-    for task_name, task_data in D_inc.items():
-        existing[task_name] = task_data
-        print(f"'{task_name}' を追加しました。")
-
-    # 保存
-    with open(all_D_inc_path, "w", encoding="utf-8") as f:
-        json.dump(existing, f, indent=4, ensure_ascii=False)
-
-    print(f"all_D_inc.json に '{task_name}' のデータを追加しました")
-
-
+    #with open("./CodeRule/check/D_inc.json", "w", encoding="utf-8") as f:
+    #    json.dump(D_inc, f, indent=4, ensure_ascii=False)
     # ====================================================================================================
 
 
     # Stage2
     # ====================================================================================================
-    All_AR_dir = "./CodeRule"
-    os.makedirs(All_AR_dir, exist_ok=True)
-    All_AR_file_name = os.path.join(All_AR_dir, "all_action_rules.json")
 
     # Action rules =======================================================================================
+
     AR_file_name = os.path.join(output_dir, "action_rules.json")
     AR_imp_file_name = os.path.join(output_dir, "action_rules_improve.json")
     AR = ActionRules(model="gpt-3.5-turbo")
 
-    ar = AR.generate_ActionRules(TopK_real_trajectory, input_dir, All_AR_dir)
+    ar = AR.generate_ActionRules(TopK_real_trajectory, input_dir, output_dir)
     AR.save(AR_file_name, ar)
     
     improve_ar = AR.generate_ActionRulesImprove(TopK_real_trajectory, ar, input_dir)
     AR.save(AR_imp_file_name, improve_ar)
-    AR.save(All_AR_file_name, improve_ar)
-
+   
     # Knowledge graph =======================================================================================
 
     #KG = KnowledgeGraph(model="gpt-3.5-turbo")
@@ -98,31 +80,55 @@ def New_NSLearning(real_trajectory, predicted_trajectory, outdir, task_name):
     #kg = KG.generate_KnowledgeGraph(TopK_real_trajectory)
     #KG.save("./CodeRule/output/knowledge_graph.json", kg)
 
+    # Scene Graph =======================================================================================
+
+    sg = SceneGraph()
+    sg.update_last_state(real_trajectory)
+    SG_file_name = os.path.join(output_dir, "scene_graph.json")
+
+    print("=== Scene Graph ===")
+    sg.visualize()
+    sg.save(SG_file_name)
+
+    # ====================================================================================================
+    """
+    # ルールを学習しない(実験するとき)
+
+     # 既存ルールのパス
+    all_rules_path = "./CodeRule/all_code_rules.py"
+
+    # ディレクトリが存在しない場合は作成
+    os.makedirs(os.path.dirname(all_rules_path), exist_ok=True)
+
+    existing_rules = load_rules_from_file(all_rules_path)
+
+    return existing_rules
+    """
+    # ====================================================================================================
 
     # stage3: コードルールの作成
     # ====================================================================================================
-    is_available_rule = False
 
     stage3 = STAGE3(model="gpt-4.1")
 
     with open(AR_imp_file_name, "r", encoding="utf-8") as f:
         action_rules = json.load(f)
     
-    count = 0
-    while not is_available_rule:
-        print("コードルールリプランカウント:", count)
-        code_rule = stage3.generate_coderule(action_rules, input_dir)
-        is_available_rule = stage3.verify_code_rule_boolean(code_rule)
-        count += 1
+    code_rule = stage3.generate_coderule(action_rules, input_dir)
+    print("生成されたコードルールの型:")
+    print(type(code_rule))
+    print("生成されたコードルール:")
+    print(code_rule)
     
     CR_file_name = os.path.join(output_dir, "code_rules.py")
+
     stage3.save(CR_file_name, code_rule)
     
     print("===LLMが生成したコードルール===")
     print(code_rule)
 
 
-    # stage4(修正版)
+    # Stage4
     # ====================================================================================================
 
     # 新規生成されたルールをロード
@@ -132,10 +138,39 @@ def New_NSLearning(real_trajectory, predicted_trajectory, outdir, task_name):
     for rule in R_code_new:
         print(f"  - {rule.__name__} (source saved: {hasattr(rule, '__source_code__')})")
     
-    # --------------------------------------------------------------------------------------
+    # 過去に剪定されたルールをロード
+    R_code_past = []
+    pruned_path = os.path.join(output_dir, "code_rules_pruned.py")
+    if os.path.exists(pruned_path):
+        print("\n===過去の剪定済みルールをロード===")
+        R_code_past = load_rules_from_file(pruned_path)
+        print(f"過去のルール数: {len(R_code_past)}")
+        for rule in R_code_past:
+            print(f"  - {rule.__name__} (source saved: {hasattr(rule, '__source_code__')})")
+    
+    # 過去のルールと新規ルールを統合(重複除去)
+    R_code_combined = merge_rules(R_code_past, R_code_new)
+    print(f"\n===統合後のルール数: {len(R_code_combined)}===")
+    
+    # 統合されたルールセットから剪定
+    R_star = greedy_rule_selection(D_inc, R_code_combined, 5, output_dir)
+
+    print("\n===選ばれたルール===")
+    for rule in R_star:
+        has_source = hasattr(rule, '__source_code__')
+        print(f"  - {rule.__name__} (source: {'✓' if has_source else '✗'})")
+
+    # ✅ 剪定後のルールを保存(引数は2つだけ!)
+    save_pruned_rules(R_star, pruned_path)
+
+    # return R_star
+
+    # ======================================================================
 
     # 既存ルールのパス
     all_rules_path = "./CodeRule/all_code_rules.py"
+
+    # ディレクトリが存在しない場合は作成
     os.makedirs(os.path.dirname(all_rules_path), exist_ok=True)
 
     # 既存ルールを読み込み
@@ -145,37 +180,17 @@ def New_NSLearning(real_trajectory, predicted_trajectory, outdir, task_name):
         print(f"✓ 既存ルール数: {len(existing_rules)}")
     else:
         print("✓ 既存ルールなし（新規作成）")
-    
-    # --------------------------------------------------------------------------------------
-    
-    # 今回生成されたルールと既存ルールをマージ
-    merged_rules = merge_rules(existing_rules, R_code_new)
+
+    # 今回剪定されたルール(R_star)と既存ルールをマージ
+    merged_rules = merge_rules(existing_rules, R_star)
     print(f"✓ マージ後のルール数: {len(merged_rules)}")
 
-    # --------------------------------------------------------------------------------------
+    # マージした結果を保存
+    save_pruned_rules(merged_rules, all_rules_path)
 
-    # 統合済み D_incをロード
-    if os.path.exists(all_D_inc_path):
-        with open(all_D_inc_path, "r", encoding="utf-8") as f:
-            merged_D_inc = json.load(f)
-    else:
-        merged_D_inc = {}  # 無ければ空辞書
+    return merged_rules  
 
-    # --------------------------------------------------------------------------------------
-
-    # 統合済み D_inc を使ってルール選定
-    R_star = greedy_rule_selection(merged_D_inc, merged_rules, 5, outdir)
-
-    print("\n===選ばれたルール===")
-    for rule in R_star:
-        has_source = hasattr(rule, '__source_code__')
-        print(f"  - {rule.__name__} (source: {'✓' if has_source else '✗'})")
-    
-    save_pruned_rules(R_star, all_rules_path)
-
-    return R_star
-
-    # ===================================================================================================
+    # ====================================================================================================
 
     
 
@@ -314,4 +329,3 @@ def merge_rules(past_rules, new_rules):
     print(f"重複除外後: {len(combined_rules)}件")
     
     return combined_rules
-
