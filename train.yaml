@@ -1,0 +1,108 @@
+tasks:
+  A1:
+    group: "Examine_in_Light"
+    name: "look at bowl under the desklamp."
+    path: "/root/.cache/alfworld/json_2.1.1/valid_train/look_at_obj_in_light-Bowl-None-DeskLamp-304/trial_T20190907_232227_752681/game.tw-pddl"
+
+  A2:
+    group: "Examine_in_Light"
+    name: "look at cd under the desklamp."
+    path: "/root/.cache/alfworld/json_2.1.1/valid_train/look_at_obj_in_light-CD-None-DeskLamp-327/trial_T20190909_032921_008718/game.tw-pddl"
+
+  A3:
+    group: "Examine_in_Light"
+    name: "look at laptop under the desklamp."
+    path: "/root/.cache/alfworld/json_2.1.1/valid_train/look_at_obj_in_light-Laptop-None-DeskLamp-324/trial_T20190908_071137_867346/game.tw-pddl"
+
+# =============================================================================================
+
+  B1:
+    group: "Pick_and_Place"
+    name: "put some book on armchair."
+    path: "/root/.cache/alfworld/json_2.1.1/train/pick_and_place_simple-Book-None-ArmChair-209/trial_T20190909_091451_936328/game.tw-pddl"
+  
+  B2:
+    group: "Pick_and_Place"
+    name: "put some knife on sidetable. "
+    path: "/root/.cache/alfworld/json_2.1.1/train/pick_and_place_simple-Knife-None-SideTable-3/trial_T20190906_214318_430974/game.tw-pddl"
+  
+  B3:
+    group: "Pick_and_Place"
+    name: "put a remotecontrol in armchair."
+    path: "/root/.cache/alfworld/json_2.1.1/train/pick_and_place_simple-RemoteControl-None-ArmChair-230/trial_T20190909_020906_064567/game.tw-pddl"
+  
+  
+# =============================================================================================
+
+  C1:
+    group: "Clean_and_Place"
+    name: "put a clean potato in countertop."
+    path: "/root/.cache/alfworld/json_2.1.1/train/pick_clean_then_place_in_recep-Potato-None-CounterTop-5/trial_T20190909_123141_081448/game.tw-pddl"
+  
+  C2:
+    group: "Clean_and_Place"
+    name: "clean some cloth and put it in toilet."
+    path: "/root/.cache/alfworld/json_2.1.1/train/pick_clean_then_place_in_recep-Cloth-None-Toilet-426/trial_T20190910_045202_007687/game.tw-pddl"
+  
+  C3:
+    group: "Clean_and_Place"
+    name: "put a clean kettle in cabinet."
+    path: "/root/.cache/alfworld/json_2.1.1/valid_train/pick_clean_then_place_in_recep-Kettle-None-Cabinet-2/trial_T20190909_042935_977031/game.tw-pddl"
+  
+# ==============================================================================================
+
+  D1:
+    group: "Cool_and_Place"
+    name: "put a cool pan in diningtable."
+    path: "/root/.cache/alfworld/json_2.1.1/valid_train/pick_cool_then_place_in_recep-Pan-None-DiningTable-7/trial_T20190909_094708_361033/game.tw-pddl"
+  
+  D2:
+    group: "Cool_and_Place"
+    name: "put a cool plate in shelf."
+    path: "/root/.cache/alfworld/json_2.1.1/valid_train/pick_cool_then_place_in_recep-Plate-None-Shelf-7/trial_T20190907_125004_299560/game.tw-pddl"
+  
+  D3:
+    group: "Cool_and_Place"
+    name: "put a cool winebottle in diningtable."
+    path: "/root/.cache/alfworld/json_2.1.1/valid_train/pick_cool_then_place_in_recep-WineBottle-None-DiningTable-17/trial_T20190908_003313_375871/game.tw-pddl"
+  
+
+# ==============================================================================================
+
+  E1:
+    group: "Heat_and_Place"
+    name: "heat some plate and put it in countertop."
+    path: "/root/.cache/alfworld/json_2.1.1/train/pick_heat_then_place_in_recep-Plate-None-CounterTop-28/trial_T20190907_180239_626804/game.tw-pddl"
+  
+  E2:
+    group: "Heat_and_Place"
+    name: "heat some egg and put it in garbagecan."
+    path: "/root/.cache/alfworld/json_2.1.1/valid_train/pick_heat_then_place_in_recep-Egg-None-GarbageCan-23/trial_T20190911_011457_072067/game.tw-pddl"
+  
+  E3:
+    group: "Heat_and_Place"
+    name: "put a hot mug in coffeemachine."
+    path: "/root/.cache/alfworld/json_2.1.1/valid_train/pick_heat_then_place_in_recep-Mug-None-CoffeeMachine-22/trial_T20190906_184650_216044/game.tw-pddl"
+  
+# ===============================================================================================
+
+  F1:
+    group: "PickTwo_and_Place"
+    name: "find two cloth and put them in sinkbasin."
+    path: "/root/.cache/alfworld/json_2.1.1/train/pick_two_obj_and_place-Cloth-None-SinkBasin-405/trial_T20190909_074547_875583/game.tw-pddl"
+  F2:
+    group: "PickTwo_and_Place"
+    name: "find two soapbar and put them in drawer."
+    path: "/root/.cache/alfworld/json_2.1.1/valid_train/pick_two_obj_and_place-SoapBar-None-Drawer-420/trial_T20190908_124733_053705/game.tw-pddl"
+  
+  F3:
+    group: "PickTwo_and_Place"
+    name: "find two statue and put them in dresser."
+    path: "/root/.cache/alfworld/json_2.1.1/valid_train/pick_two_obj_and_place-Statue-None-Dresser-213/trial_T20190909_065309_623947/game.tw-pddl"
+
+
+
+
+
+
+
