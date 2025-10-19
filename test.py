@@ -14,6 +14,10 @@ python test.py ./results --group Examine_in_Light --random_per_group 3
 
 # 全グループから1つずつ
 python test.py ./results --random_all_groups
+
+# 全グループからランダムに N 個（例：10個）
+python test.py ./results --random_all_groups_n 10
+
 """
 
 import os
@@ -32,6 +36,7 @@ parser.add_argument('outdir', nargs='?', default='./default', help='Output direc
 parser.add_argument('--group', type=str, help='カテゴリ名（例: pick_and_place_simple）')
 parser.add_argument('--random_per_group', type=int, help='カテゴリ内からランダムに選ぶ数')
 parser.add_argument('--random_all_groups', action='store_true', help='全カテゴリから1つずつランダム選択')
+parser.add_argument('--random_all_groups_n', type=int, help='全グループからランダムにN個選択')  
 parser.add_argument('--task', type=str, help='単一タスクID（例: F3）')
 parser.add_argument('--tasks', nargs='+', help='複数タスクID（例: F1 F2 F3）')
 parser.add_argument('--all', action='store_true', help='全タスクを昇順で実行')
@@ -44,7 +49,7 @@ if not os.path.exists(outdir):
     os.makedirs(outdir)
 
 # === tasks.yaml 読み込み ===
-with open('tasks.yaml', 'r') as f:
+with open('train.yaml', 'r') as f:
     tasks_config = yaml.safe_load(f)['tasks']
 # =======================================================================================================================
 
@@ -99,6 +104,12 @@ else:
             g_tasks = [tid for tid, t in tasks_config.items() if t['group'] == g]
             selected_tasks.append(random.choice(g_tasks))
         print(f"全 {len(groups)} グループから1つずつ選択: {selected_tasks}")
+    
+    elif args.random_all_groups_n:
+        # ★新機能：全グループからランダムにN個選択
+        all_tasks = list(tasks_config.keys())
+        selected_tasks = random.sample(all_tasks, min(args.random_all_groups_n, len(all_tasks)))
+        print(f"全グループの中からランダムに {len(selected_tasks)} タスク選択: {selected_tasks}")
 
     elif args.task:
         selected_tasks = [args.task]
@@ -178,12 +189,12 @@ else:
         transition_dir = os.path.join(task_outdir, "transition_log")
         os.makedirs(transition_dir, exist_ok=True)
             
-        while not done_flag and t_index < 50:
+        while not done_flag:
             print(f"\n--- Running MPC for Step {t_index} ---")
             print(Rcode_t)
             # ===============================================================================================
             # MPCを実行し、計画されたアクションと予測された次の状態(Ot+1)を取得.
-            current_planned_action = MPC(obs_state, Rcode_t, agent, world_model, t_index, task_outdir, 10, task_name)
+            current_planned_action = MPC(obs_state, Rcode_t, agent, world_model, t_index, task_outdir, 3, task_name)
             print(f"計画された行動:{current_planned_action}")
         
             # utilsフォルダのmake_action_commandを使って、アクションコマンド作成.
