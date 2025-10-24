@@ -1,0 +1,39 @@
+{    
+    "state": {
+        "reachable_locations": [
+            "cabinet 1",
+            "cabinet 2",
+            "cabinet 3",
+            "cabinet 4",
+            "coffeemachine 1",
+            "countertop 1",
+            "drawer 1",
+            "drawer 2",
+            "drawer 3",
+            "drawer 4",
+            "drawer 5",
+            "drawer 6",
+            "drawer 7",
+            "drawer 8",
+            "fridge 1",
+            "garbagecan 1",
+            "microwave 1",
+            "sidetable 1",
+            "sinkbasin 1",
+            "stoveburner 1",
+            "stoveburner 2",
+            "stoveburner 3",
+            "stoveburner 4",
+            "toaster 1"
+        ],
+        "items_in_locations": {},
+        "item_in_hand": {
+            "item_name": null,
+            "status": null
+        },
+        "current_position": {
+            "location_name": "middle_of_room",
+            "status": null
+        }
+    }
+}    
