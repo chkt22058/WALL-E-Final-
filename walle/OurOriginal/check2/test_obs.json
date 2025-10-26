@@ -1,0 +1,331 @@
+{
+    "put a cool pan in diningtable.": {
+        "0": {
+            "state": {
+                "reachable_locations": [
+                    "cabinet 1",
+                    "cabinet 2",
+                    "cabinet 3",
+                    "cabinet 4",
+                    "cabinet 5",
+                    "cabinet 6",
+                    "cabinet 7",
+                    "cabinet 8",
+                    "cabinet 9",
+                    "cabinet 10",
+                    "cabinet 11",
+                    "cabinet 12",
+                    "cabinet 13",
+                    "coffeemachine 1",
+                    "countertop 1",
+                    "countertop 2",
+                    "diningtable 1",
+                    "drawer 1",
+                    "drawer 2",
+                    "drawer 3",
+                    "drawer 4",
+                    "fridge 1",
+                    "garbagecan 1",
+                    "microwave 1",
+                    "shelf 1",
+                    "shelf 2",
+                    "shelf 3",
+                    "sinkbasin 1",
+                    "stoveburner 1",
+                    "stoveburner 2",
+                    "stoveburner 3",
+                    "stoveburner 4",
+                    "toaster 1"
+                ],
+                "items_in_locations": {},
+                "item_in_hand": {
+                    "item_name": null,
+                    "status": null
+                },
+                "current_position": {
+                    "location_name": "middle_of_room",
+                    "status": null
+                }
+            },
+            "action": {
+                "action_name": "goto",
+                "args": {
+                    "recep": "cabinet 1"
+                }
+            },
+            "action_result": {
+                "feedback": "You arrive at cabinet 1. The cabinet 1 is closed.",
+                "success": true,
+                "suggestion": ""
+            }
+        },
+        "1": {
+            "state": {
+                "reachable_locations": [
+                    "cabinet 1",
+                    "cabinet 2",
+                    "cabinet 3",
+                    "cabinet 4",
+                    "cabinet 5",
+                    "cabinet 6",
+                    "cabinet 7",
+                    "cabinet 8",
+                    "cabinet 9",
+                    "cabinet 10",
+                    "cabinet 11",
+                    "cabinet 12",
+                    "cabinet 13",
+                    "coffeemachine 1",
+                    "countertop 1",
+                    "countertop 2",
+                    "diningtable 1",
+                    "drawer 1",
+                    "drawer 2",
+                    "drawer 3",
+                    "drawer 4",
+                    "fridge 1",
+                    "garbagecan 1",
+                    "microwave 1",
+                    "shelf 1",
+                    "shelf 2",
+                    "shelf 3",
+                    "sinkbasin 1",
+                    "stoveburner 1",
+                    "stoveburner 2",
+                    "stoveburner 3",
+                    "stoveburner 4",
+                    "toaster 1"
+                ],
+                "items_in_locations": {
+                    "cabinet 1": {
+                        "items": [],
+                        "status": "closed"
+                    }
+                },
+                "item_in_hand": {
+                    "item_name": null,
+                    "status": null
+                },
+                "current_position": {
+                    "location_name": "cabinet 1",
+                    "status": "closed"
+                }
+            },
+            "action": {
+                "action_name": "goto",
+                "args": {
+                    "recep": "fridge 1"
+                }
+            },
+            "action_result": {
+                "feedback": "You arrive at fridge 1. The fridge 1 is closed.",
+                "success": true,
+                "suggestion": ""
+            }
+        },
+        "2": {
+            "state": {
+                "reachable_locations": [
+                    "cabinet 1",
+                    "cabinet 2",
+                    "cabinet 3",
+                    "cabinet 4",
+                    "cabinet 5",
+                    "cabinet 6",
+                    "cabinet 7",
+                    "cabinet 8",
+                    "cabinet 9",
+                    "cabinet 10",
+                    "cabinet 11",
+                    "cabinet 12",
+                    "cabinet 13",
+                    "coffeemachine 1",
+                    "countertop 1",
+                    "countertop 2",
+                    "diningtable 1",
+                    "drawer 1",
+                    "drawer 2",
+                    "drawer 3",
+                    "drawer 4",
+                    "fridge 1",
+                    "garbagecan 1",
+                    "microwave 1",
+                    "shelf 1",
+                    "shelf 2",
+                    "shelf 3",
+                    "sinkbasin 1",
+                    "stoveburner 1",
+                    "stoveburner 2",
+                    "stoveburner 3",
+                    "stoveburner 4",
+                    "toaster 1"
+                ],
+                "items_in_locations": {
+                    "cabinet 1": {
+                        "items": [],
+                        "status": "closed"
+                    },
+                    "fridge 1": {
+                        "items": [],
+                        "status": "closed"
+                    }
+                },
+                "item_in_hand": {
+                    "item_name": null,
+                    "status": null
+                },
+                "current_position": {
+                    "location_name": "fridge 1",
+                    "status": "closed"
+                }
+            },
+            "action": {
+                "action_name": "open",
+                "args": {
+                    "recep": "cabinet 1"
+                }
+            },
+            "action_result": {
+                "feedback": "Nothing happens.",
+                "success": false,
+                "suggestion": ""
+            }
+        },
+        "3": {
+            "state": {
+                "reachable_locations": [
+                    "cabinet 1",
+                    "cabinet 2",
+                    "cabinet 3",
+                    "cabinet 4",
+                    "cabinet 5",
+                    "cabinet 6",
+                    "cabinet 7",
+                    "cabinet 8",
+                    "cabinet 9",
+                    "cabinet 10",
+                    "cabinet 11",
+                    "cabinet 12",
+                    "cabinet 13",
+                    "coffeemachine 1",
+                    "countertop 1",
+                    "countertop 2",
+                    "diningtable 1",
+                    "drawer 1",
+                    "drawer 2",
+                    "drawer 3",
+                    "drawer 4",
+                    "fridge 1",
+                    "garbagecan 1",
+                    "microwave 1",
+                    "shelf 1",
+                    "shelf 2",
+                    "shelf 3",
+                    "sinkbasin 1",
+                    "stoveburner 1",
+                    "stoveburner 2",
+                    "stoveburner 3",
+                    "stoveburner 4",
+                    "toaster 1"
+                ],
+                "items_in_locations": {
+                    "cabinet 1": {
+                        "items": [],
+                        "status": "closed"
+                    },
+                    "fridge 1": {
+                        "items": [],
+                        "status": "closed"
+                    }
+                },
+                "item_in_hand": {
+                    "item_name": null,
+                    "status": null
+                },
+                "current_position": {
+                    "location_name": "fridge 1",
+                    "status": "closed"
+                }
+            },
+            "action": {
+                "action_name": "goto",
+                "args": {
+                    "recep": "cabinet 1"
+                }
+            },
+            "action_result": {
+                "feedback": "You arrive at cabinet 1. The cabinet 1 is closed.",
+                "success": true,
+                "suggestion": ""
+            }
+        },
+        "4": {
+            "state": {
+                "reachable_locations": [
+                    "cabinet 1",
+                    "cabinet 2",
+                    "cabinet 3",
+                    "cabinet 4",
+                    "cabinet 5",
+                    "cabinet 6",
+                    "cabinet 7",
+                    "cabinet 8",
+                    "cabinet 9",
+                    "cabinet 10",
+                    "cabinet 11",
+                    "cabinet 12",
+                    "cabinet 13",
+                    "coffeemachine 1",
+                    "countertop 1",
+                    "countertop 2",
+                    "diningtable 1",
+                    "drawer 1",
+                    "drawer 2",
+                    "drawer 3",
+                    "drawer 4",
+                    "fridge 1",
+                    "garbagecan 1",
+                    "microwave 1",
+                    "shelf 1",
+                    "shelf 2",
+                    "shelf 3",
+                    "sinkbasin 1",
+                    "stoveburner 1",
+                    "stoveburner 2",
+                    "stoveburner 3",
+                    "stoveburner 4",
+                    "toaster 1"
+                ],
+                "items_in_locations": {
+                    "cabinet 1": {
+                        "items": [],
+                        "status": "closed"
+                    },
+                    "fridge 1": {
+                        "items": [],
+                        "status": "closed"
+                    }
+                },
+                "item_in_hand": {
+                    "item_name": null,
+                    "status": null
+                },
+                "current_position": {
+                    "location_name": "cabinet 1",
+                    "status": "closed"
+                }
+            },
+            "action": {
+                "action_name": "open",
+                "args": {
+                    "recep": "fridge 1"
+                }
+            },
+            "action_result": {
+                "feedback": "Nothing happens.",
+                "success": false,
+                "suggestion": ""
+            }
+        }
+    }
+}
