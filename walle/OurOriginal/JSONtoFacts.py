@@ -53,6 +53,8 @@ def state_action_to_facts(sample: dict) -> str:
         status = loc_info.get("status")
         if status:
             facts.append(f"location_status({loc}, {normalize_name(status)}).")
+        else:
+            facts.append(f"location_status({loc}, null).")
 
     # --- State: item in hand ---
     if "item_in_hand" in state:
@@ -63,10 +65,11 @@ def state_action_to_facts(sample: dict) -> str:
             if status:
                 facts.append(f"item_in_hand({item}, {normalize_name(status)}).")
             else:
-                facts.append(f"item_in_hand({item}, held).")
-        # 何も持っていない場合は Fact を作らない
+                facts.append(f"item_in_hand({item}, null).")
+
+        # 何も持っていない場合
         else:
-            facts.append(f"item_in_hand(dummy, dummy).")
+            facts.append(f"item_in_hand(null, null).")
 
 
     # --- State: reachable locations ---
@@ -76,24 +79,40 @@ def state_action_to_facts(sample: dict) -> str:
             facts.append(f"reachable_location({loc}).")
 
     # --- State: items in locations ---
-    if "items_in_locations" in state:
-        for location, info in state["items_in_locations"].items():
-            loc = normalize_name(location)
-            items = info.get("items", [])
+    items_in_location_generated = False
+    empty_generated = False  # emptyフラグも追加
 
-            # アイテムがある場合
-            if items:
-                for item in items:
-                    item = normalize_name(item)
-                    facts.append(f"items_in_location({item}, {loc}).")
-            else:
-                # 空の棚を明示
-                facts.append(f"empty({loc}).")
+    if "items_in_locations" in state:
+        items_in_locations = state["items_in_locations"]
+    
+        # items_in_locationsが空でない場合
+        if items_in_locations:
+            for location, info in items_in_locations.items():
+                loc = normalize_name(location)
+                items = info.get("items", [])
+
+                # アイテムがある場合
+                if items:
+                    for item in items:
+                        item = normalize_name(item)
+                        facts.append(f"items_in_location({item}, {loc}).")
+                        items_in_location_generated = True
+                else:
+                    # 空の棚を明示
+                    facts.append(f"empty({loc}).")
+                    empty_generated = True
             
-            # 場所の status があれば追加
-            loc_status = info.get("status")
-            if loc_status:
-                facts.append(f"location_status({loc}, {normalize_name(loc_status)}).")
+                # 場所の status があれば追加
+                loc_status = info.get("status")
+                if loc_status:
+                    facts.append(f"location_status({loc}, {normalize_name(loc_status)}).")
+
+    # ダミーを追加
+    if not items_in_location_generated:
+        facts.append(f"items_in_location(null, null).")
+
+    if not empty_generated:
+        facts.append(f"empty(null).")
 
     return "\n".join(facts)
     # return facts

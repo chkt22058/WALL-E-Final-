@@ -1,5 +1,7 @@
 action(goto(drawer_1)).
 current_position(middle_of_room).
+location_status(middle_of_room, null)
+item_in_hand(null, null).
 reachable_location(bathtubbasin_1).
 reachable_location(countertop_1).
 reachable_location(drawer_1).
@@ -17,3 +19,5 @@ reachable_location(toilet_1).
 reachable_location(toiletpaperhanger_1).
 reachable_location(towelholder_1).
 reachable_location(towelholder_2).
+items_in_location(null, null).
+empty(null).
