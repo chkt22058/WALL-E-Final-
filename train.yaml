@@ -88,8 +88,8 @@ tasks:
 
   F1:
     group: "PickTwo_and_Place"
-    name: "find two cloth and put them in sinkbasin."
-    path: "/root/.cache/alfworld/json_2.1.1/train/pick_two_obj_and_place-Cloth-None-SinkBasin-405/trial_T20190909_074547_875583/game.tw-pddl"
+    name: "find two pencil and put them in drawer."
+    path: "/root/.cache/alfworld/json_2.1.1/valid_train/pick_two_obj_and_place-Pencil-None-Drawer-327/trial_T20190908_103604_088470/game.tw-pddl"
   F2:
     group: "PickTwo_and_Place"
     name: "find two soapbar and put them in drawer."
