@@ -7,6 +7,7 @@ import re
 import importlib.util
 import sys
 import ast
+from typing import List, Dict, Any
 
 
 from .stage1 import *
@@ -17,9 +18,10 @@ from .stage3 import *
 from .stage4 import *
 
 from networkx.readwrite import json_graph
+from filelock import FileLock
 
 
-def New_NSLearning(real_trajectory, predicted_trajectory, outdir, task_name):
+def New_NSLearning(real_trajectory, predicted_trajectory, scene_graph, outdir, task_name):
     coderule_dir = os.path.join(outdir, "CodeRule")
     os.makedirs(coderule_dir, exist_ok=True)
 
@@ -39,36 +41,59 @@ def New_NSLearning(real_trajectory, predicted_trajectory, outdir, task_name):
     # Stage1
     # ====================================================================================================
     # 既存D_incorrectのパス
-    all_D_inc_path = "./CodeRule/all_D_inc.json"
-    os.makedirs(os.path.dirname(all_D_inc_path), exist_ok=True)
-
-    D_cor, D_inc = implement_stage1(real_trajectory, predicted_trajectory, task_name)
-
-    Dcor_file_name = os.path.join(check_dir, "D_cor.json")
-    with open(Dcor_file_name, "w", encoding="utf-8") as f:
-        json.dump(D_cor, f, indent=4, ensure_ascii=False)
-
-    Dinc_file_name = os.path.join(check_dir, "D_inc.json")
-    with open(Dinc_file_name, "w", encoding="utf-8") as f:
-        json.dump(D_inc, f, indent=4, ensure_ascii=False)
+    D_inc_all_path = os.path.join("CodeRule", "D_inc_all.json")
+    os.makedirs(os.path.dirname(D_inc_all_path), exist_ok=True)
+    all_inc_list_existing = []
+    if os.path.exists(D_inc_all_path) and os.path.getsize(D_inc_all_path) > 0:
+        with open(D_inc_all_path, "r", encoding="utf-8") as f:
+            try:
+                all_inc_list_existing = json.load(f)
+            except json.JSONDecodeError:
+                print("Warning: D_inc_all.json のパース失敗。新規リストで開始。")
     
+    # 既存D_incorrectのパス
+    D_cor_all_path = os.path.join("CodeRule", "D_cor_all.json")
+    os.makedirs(os.path.dirname(D_cor_all_path), exist_ok=True)
+    all_cor_list_existing = []
+    if os.path.exists(D_cor_all_path) and os.path.getsize(D_cor_all_path) > 0:
+        with open(D_cor_all_path, "r", encoding="utf-8") as f:
+            try:
+                all_cor_list_existing = json.load(f)
+            except json.JSONDecodeError:
+                print("Warning: D_cor_all.json のパース失敗。新規リストで開始。")
+    
+    D_cor, D_inc, D_cor_all, D_inc_all = implement_stage1(
+        real_trajectory, predicted_trajectory, all_inc_list_existing, all_cor_list_existing, scene_graph, task_name)
 
-    if os.path.exists(all_D_inc_path):
-        with open(all_D_inc_path, "r", encoding="utf-8") as f:
-            existing = json.load(f)
-    else:
-        existing = {} 
+    # D_cor の保存 
+    Dcor_file_name = os.path.join(check_dir, "D_cor.json")
+    lock_path_cor = Dcor_file_name + ".lock"
+    with FileLock(lock_path_cor):
+        with open(Dcor_file_name, "w", encoding="utf-8") as f:
+            json.dump(D_cor, f, indent=4, ensure_ascii=False)
 
-    for task_name, task_data in D_inc.items():
-        existing[task_name] = task_data
-        print(f"'{task_name}' を追加しました。")
+    # D_inc の保存 
+    Dinc_file_name = os.path.join(check_dir, "D_inc.json")
+    lock_path_inc = Dinc_file_name + ".lock"
+    with FileLock(lock_path_inc):
+        with open(Dinc_file_name, "w", encoding="utf-8") as f:
+            json.dump(D_inc, f, indent=4, ensure_ascii=False)
+    
+    # D_cor_all の保存
+    lock_path_all_cor = D_cor_all_path + ".lock"
+    with FileLock(lock_path_all_cor):
+        with open(D_cor_all_path, 'w', encoding="utf-8") as f:
+            json.dump(D_cor_all, f, indent=4, ensure_ascii=False) 
 
-    # 保存
-    with open(all_D_inc_path, "w", encoding="utf-8") as f:
-        json.dump(existing, f, indent=4, ensure_ascii=False)
+    print(f"✅ all_D_cor.json ({len(D_cor_all)}件) を更新しました。")
 
-    print(f"all_D_inc.json に '{task_name}' のデータを追加しました")
-
+    # D_inc_all の保存
+    lock_path_all_inc = D_inc_all_path + ".lock"
+    with FileLock(lock_path_all_inc):
+        with open(D_inc_all_path, 'w', encoding="utf-8") as f:
+            json.dump(D_inc_all, f, indent=4, ensure_ascii=False) 
+    
+    print(f"✅ all_D_inc.json ({len(D_inc_all)}件) を更新しました。")
 
     # ====================================================================================================
 
@@ -82,7 +107,7 @@ def New_NSLearning(real_trajectory, predicted_trajectory, outdir, task_name):
     # Action rules =======================================================================================
     AR_file_name = os.path.join(output_dir, "action_rules.json")
     AR_imp_file_name = os.path.join(output_dir, "action_rules_improve.json")
-    AR = ActionRules(model="gpt-3.5-turbo")
+    AR = ActionRules(model="gpt-4.1")
 
     ar = AR.generate_ActionRules(TopK_real_trajectory, input_dir, All_AR_dir)
     AR.save(AR_file_name, ar)
@@ -90,14 +115,6 @@ def New_NSLearning(real_trajectory, predicted_trajectory, outdir, task_name):
     improve_ar = AR.generate_ActionRulesImprove(TopK_real_trajectory, ar, input_dir)
     AR.save(AR_imp_file_name, improve_ar)
     AR.save(All_AR_file_name, improve_ar)
-
-    # Knowledge graph =======================================================================================
-
-    #KG = KnowledgeGraph(model="gpt-3.5-turbo")
-
-    #kg = KG.generate_KnowledgeGraph(TopK_real_trajectory)
-    #KG.save("./CodeRule/output/knowledge_graph.json", kg)
-
 
     # stage3: コードルールの作成
     # ====================================================================================================
@@ -109,7 +126,7 @@ def New_NSLearning(real_trajectory, predicted_trajectory, outdir, task_name):
         action_rules = json.load(f)
     
     count = 0
-    while not is_available_rule:
+    while not is_available_rule and count < 5:
         print("コードルールリプランカウント:", count)
         code_rule = stage3.generate_coderule(action_rules, input_dir)
         is_available_rule = stage3.verify_code_rule_boolean(code_rule)
@@ -137,7 +154,6 @@ def New_NSLearning(real_trajectory, predicted_trajectory, outdir, task_name):
     # 既存ルールのパス
     all_rules_path = "./CodeRule/all_code_rules.py"
     os.makedirs(os.path.dirname(all_rules_path), exist_ok=True)
-
     # 既存ルールを読み込み
     existing_rules = []
     if os.path.exists(all_rules_path):
@@ -155,16 +171,29 @@ def New_NSLearning(real_trajectory, predicted_trajectory, outdir, task_name):
     # --------------------------------------------------------------------------------------
 
     # 統合済み D_incをロード
-    if os.path.exists(all_D_inc_path):
-        with open(all_D_inc_path, "r", encoding="utf-8") as f:
-            merged_D_inc = json.load(f)
-    else:
-        merged_D_inc = {}  # 無ければ空辞書
+    merged_D_inc: Dict[str, Dict[str, Any]] = {}
+    for step_entry in D_inc_all: 
+        t_id = step_entry['task_id']
+        s_id = str(step_entry['step_id']) 
+        s_data = step_entry['step_data']
+        if t_id not in merged_D_inc:
+            merged_D_inc[t_id] = {}
+        merged_D_inc[t_id][s_id] = s_data
+    
+    # 統合済み D_corをロード
+    merged_D_cor: Dict[str, Dict[str, Any]] = {}
+    for step_entry in D_cor_all: 
+        t_id = step_entry['task_id']
+        s_id = str(step_entry['step_id']) 
+        s_data = step_entry['step_data']
+        if t_id not in merged_D_cor:
+            merged_D_cor[t_id] = {}
+        merged_D_cor[t_id][s_id] = s_data
 
     # --------------------------------------------------------------------------------------
 
     # 統合済み D_inc を使ってルール選定
-    R_star = greedy_rule_selection(merged_D_inc, merged_rules, 5, outdir)
+    R_star = greedy_rule_selection(merged_D_inc, merged_D_cor, merged_rules, 5, outdir)
 
     print("\n===選ばれたルール===")
     for rule in R_star:
@@ -314,4 +343,3 @@ def merge_rules(past_rules, new_rules):
     print(f"重複除外後: {len(combined_rules)}件")
     
     return combined_rules
-

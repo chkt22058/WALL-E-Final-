@@ -7,6 +7,7 @@ import re
 import inspect
 import textwrap
 from typing import List, Callable, Tuple, Dict, Optional
+import ast
 
 # OpenAI APIキーの設定 (環境変数から取得することを推奨)
 try:
@@ -71,28 +72,32 @@ state:
     "items_in_locations": {
         "desk 1": {
 	        "items": [
-	          "bowl 2",
+	        "bowl 2",
             "bowl 1",
             "cellphone 1",
             "keychain 1",
             "pencil 2",
             "remotecontrol 1"
           ],
-          "status": null
+          "status": null,
+          "adjacent": ["No_other_locations"]                                        
         },
         "drawer 1": {
            "items": [],
-           "status": "closed"
+           "status": "closed",
+           "adjacent": ["No_other_locations"]                                         
         },
         "drawer 2": {
            "items": [],
-           "status": "closed"
+           "status": "closed",
+           "adjacent": ["drawer 3"] 
         },
         "shelf 1": {
            "items": [
 	           "pencil 1"
            ],
-           "status": null
+           "status": null,
+           "adjacent": ["No_other_locations"]                                         
         }
     },
     "item_in_hand": {
@@ -101,7 +106,7 @@ state:
     },
     "current_position": {
 	    "location_name": "drawer 2",
-      "status": "closed"
+        "status": "closed"                     
     }
 }
 
@@ -228,6 +233,13 @@ given rules：
 
         if self.client is None:
             print("[CodeRule] Error: OpenAI client is not available. Cannot generate action.")
+        
+        try:
+            ast.parse(code_rule)
+            compile(code_rule, "<string>", "exec")
+        except Exception as e:
+            print(f"[Syntax/Compile Error Detected] {e}")
+            return False
 
         # プロンプト ===================================================================
         system_prompt = textwrap.dedent("""
@@ -240,9 +252,7 @@ If the code cannot be executed due to any errors, output exactly "False".
 Do not explain or add any text other than "True" or "False".
         """)
         
-        header = textwrap.dedent("""
---- CODE START ---
-        """)
+        header = "--- CODE START ---\n"
 
         user_prompt = header + str(code_rule)
 
