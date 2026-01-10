@@ -34,5 +34,7 @@ def make_action_command(response: dict) -> str:
         return f"cool {obj} with {recep}"
     elif action == "use":
         return f"use {tool}"
+    elif action == "look":
+        return f"look"
     else:
         raise ValueError(f"Unknown action: {action}")
