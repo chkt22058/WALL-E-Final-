@@ -65,6 +65,8 @@ from copy import deepcopy
 
 from walle.NSLearning.new_nslearning import *
 
+from walle.MPC.new_scene_graph import SceneGraph
+
 # OpenAI APIキーの設定 (環境変数から取得することを推奨)
 try:
     client = openai.OpenAI()
@@ -139,6 +141,16 @@ else:
         print(f"{task_id}: {tasks_config[task_id]['name']} ({tasks_config[task_id]['group']})")
     print("================================\n")
 
+    # === 保存済みコードルールのロード処理 ===
+    
+    
+    #rule_file_path = "./CodeRule/all_code_rules.py"  # 保存先のパスを指定
+    #print(f"[Init] Loading existing rules from {rule_file_path}...")
+    #Rcode_t = load_rules_from_file(rule_file_path)
+    #print(f"[Init] Successfully loaded {len(Rcode_t)} rules.")
+    
+    Rcode_t = []
+
     # === 各タスクを順番に実行 ===
     for i, task_id in enumerate(selected_tasks, 1):
         task_info = tasks_config[task_id]
@@ -181,20 +193,26 @@ else:
         # ======================================================================================================================
 
         t_index = 0
-        Rcode_t = []
         real_trajectory = {}
         predicted_trajectory = {}
+        scene_graph = {}
         done_flag = False
 
         transition_dir = os.path.join(task_outdir, "transition_log")
         os.makedirs(transition_dir, exist_ok=True)
+
+        # ★ 追加1: タスク開始時にシーングラフを初期化（空にする）
+        sg = SceneGraph() 
+        
+        # 初期観測で一度更新しておく（必要であれば）
+        sg.update(obs_state["state"])
             
-        while not done_flag:
+        while not done_flag and t_index < 30:
             print(f"\n--- Running MPC for Step {t_index} ---")
             print(Rcode_t)
             # ===============================================================================================
             # MPCを実行し、計画されたアクションと予測された次の状態(Ot+1)を取得.
-            current_planned_action = MPC(obs_state, Rcode_t, agent, world_model, t_index, task_outdir, 3, task_name)
+            current_planned_action = MPC(obs_state, Rcode_t, agent, world_model, t_index, task_outdir, 3, task_name, sg)
             print(f"計画された行動:{current_planned_action}")
         
             # utilsフォルダのmake_action_commandを使って、アクションコマンド作成.
@@ -216,12 +234,25 @@ else:
             print(json.dumps(obs_next_state, indent=4, ensure_ascii=False))
             # ===============================================================================================
 
+            # もし、action_command =「goto」だった場合の追加処理(lookコマンド)
+            if not done_flag and action_command.startswith("go to"):
+                print(">> 自動実行: look (移動後の詳細取得)")
+                obs, reward, done, info = env.step(["look"])
+                done_flag = done[0]
+                
+                obs_look_text = obs[0]
+                obs_next_text = obs_next_text + obs_look_text
+                obs_next_state = get_updated_state_from_observation(obs_next_state, obs_look_text)
+            # ===============================================================================================
+
             # 実軌跡の保存
             real_trajectory[f"state_{t_index}"] = deepcopy(obs_state["state"])
             real_trajectory[f"action_{t_index}"] = deepcopy(current_planned_action)
             real_trajectory[f"action_result_{t_index}"] = generate_action_result_from_obs(obs_next_text)
         
             with open(os.path.join(transition_dir, f"real_trajectory_{t_index}.json"), "w", encoding="utf-8") as f:
+                json.dump(real_trajectory, f, indent=4, ensure_ascii=False)
+            with open(os.path.join(transition_dir, f"real_trajectory.json"), "w", encoding="utf-8") as f:
                 json.dump(real_trajectory, f, indent=4, ensure_ascii=False)
         
             # 予測軌跡の保存
@@ -231,15 +262,20 @@ else:
 
             with open(os.path.join(transition_dir, f"predicted_trajectory_{t_index}.json"), "w", encoding="utf-8") as f:
                 json.dump(predicted_trajectory, f, indent=4, ensure_ascii=False)
-        
+
+            # シーングラフの保存
+            sg.update(obs_next_state["state"])
+            scene_graph[f"scene_graph_{t_index}"] = sg.to_dict()
+            with open(os.path.join(transition_dir, f"scnen_graph.json"), "w", encoding="utf-8") as f:
+                json.dump(scene_graph, f, indent=4, ensure_ascii=False)
     
             # コードルールの箇所 ================================================================================
-        
-            code_rule = New_NSLearning(real_trajectory, predicted_trajectory, task_outdir, task_name)
+            
+            code_rule = New_NSLearning(real_trajectory, predicted_trajectory, scene_graph, task_outdir, task_name)
             print("剪定されたコードルールの確認:")
             print(code_rule)
-            Rcode_t = code_rule
-        
+            # Rcode_t = code_rule
+            
             # コードルールの箇所 ================================================================================
         
             obs_state = obs_next_state        
