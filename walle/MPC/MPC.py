@@ -548,7 +548,7 @@ This is the action you must evaluate.
             
 
 # MAPEXECUTE の実装 (Rcode を適用し、次の状態を合成的に構築)
-def MAPEXECUTE(Rcode: List[Callable], llm_wm_predicted_success: bool, llm_wm_predicted_feedback: str, llm_wm_predicted_suggestion: str, current_observation_state: Dict, proposed_action: Dict, output_dir: str, t_index: int) -> Tuple[Dict, str, str, bool]:
+def MAPEXECUTE(Rcode: List[Callable], llm_wm_predicted_success: bool, llm_wm_predicted_feedback: str, llm_wm_predicted_suggestion: str, current_observation_state: Dict, proposed_action: Dict, output_dir: str, t_index: int, scene_graph) -> Tuple[Dict, str, str, bool]:
     """
     Rcode (ルール) を用いてWorld Modelの予測を検証し、フィードバックとサジェスチョン、
     そして行動後の最終的な次の状態を生成する。
@@ -573,24 +573,7 @@ def MAPEXECUTE(Rcode: List[Callable], llm_wm_predicted_success: bool, llm_wm_pre
     print("=== proposed_action ===")
     print(json.dumps(proposed_action, indent=4, ensure_ascii=False))
     # ====================================================================================================
-
-    # Scene Graph =======================================================================================
-    sg = SceneGraph()
-    sg.update(current_observation_state.get("state", {}))
-    print("=== SceneGraph ===")
-    sg.visualize()
-
-    SG_index_file_name = os.path.join(output_dir, f"SceneGraph/scene_graph_{t_index}.json")
-    os.makedirs(os.path.dirname(SG_index_file_name), exist_ok=True)
-    sg.save(SG_index_file_name)
-
-    SG_file_name = os.path.join(output_dir, f"SceneGraph/scene_graph.json")
-    os.makedirs(os.path.dirname(SG_file_name), exist_ok=True)
-    sg.save(SG_file_name)
-
-    sg_data = sg.to_dict()
-    # ====================================================================================================
-
+    
     if not Rcode:
         # Rcodeが提供されない場合のデフォルト動作
         print("***************** Rcodeは渡されませんでした *********************")
@@ -612,7 +595,7 @@ def MAPEXECUTE(Rcode: List[Callable], llm_wm_predicted_success: bool, llm_wm_pre
         rule_feedback, rule_success, rule_suggestion = "", True, ""
     
         for rule_func in Rcode:
-            feedback, success, suggestion = rule_func(current_observation_state["state"], proposed_action, sg_data)
+            feedback, success, suggestion = rule_func(current_observation_state["state"], proposed_action, scene_graph)
             
             # Rcodeのルールの一部で失敗判定. すぐに出る.
             if not success:
@@ -634,9 +617,9 @@ def MAPEXECUTE(Rcode: List[Callable], llm_wm_predicted_success: bool, llm_wm_pre
             print(f"矛盾が検出されました. [LLM]: {llm_success}, [Rcode]: {rule_success}.")
             if rule_success: # Rcodeは成功と言っているのにLLMは失敗と予測
                 print("Rcodeは成功と判定、LLMは失敗と判定:")
-                final_feedback = llm_feedback
-                final_suggestion = llm_suggestion
-                final_flag = llm_success
+                final_feedback = rule_feedback
+                final_suggestion = rule_suggestion
+                final_flag = rule_success
             else: # Rcodeは失敗と言っているのにLLMは成功と予測
                 print("Rcodeは失敗と判定、LLMは成功と判定:")
                 final_feedback = rule_feedback
@@ -647,14 +630,14 @@ def MAPEXECUTE(Rcode: List[Callable], llm_wm_predicted_success: bool, llm_wm_pre
             print(f"LLMとRcodeで一致しました. [LLM]: {llm_success}, [Rcode]: {rule_success}.")
             if rule_success: # 両方成功
                 print("どちらも成功と判定:")
-                final_feedback = llm_feedback
-                final_suggestion = llm_suggestion
-                final_flag = llm_success
+                final_feedback = rule_feedback
+                final_suggestion = rule_suggestion
+                final_flag = rule_success
             else: # 両方失敗
                 print("どちらも失敗と判定:")
-                final_feedback = llm_feedback
-                final_suggestion = llm_suggestion
-                final_flag = llm_success
+                final_feedback = rule_feedback
+                final_suggestion = rule_suggestion
+                final_flag = rule_success
                 
     # === 次の状態 (oˆt+1) の構築ロジック ===
     # LLM World Modelが直接ot+1を予測しないため、MAPEXECUTEがその役割を担う
@@ -664,7 +647,7 @@ def MAPEXECUTE(Rcode: List[Callable], llm_wm_predicted_success: bool, llm_wm_pre
 
 
 # Algorithm 2: Model-Predictive Control (MPC) の実装
-def MPC(ot: Dict, Rcode: List[Callable], LLM_AGENT: LLMAgent, LLM_WORLD_MODEL: LLMWorldModel, t_index: int, outdir: str, REPLANLIMIT: int, task_name: str) -> Tuple[Dict, Dict]:
+def MPC(ot: Dict, Rcode: List[Callable], LLM_AGENT: LLMAgent, LLM_WORLD_MODEL: LLMWorldModel, t_index: int, outdir: str, REPLANLIMIT: int, task_name: str, scene_graph) -> Tuple[Dict, Dict]:
     """
     Model-Predictive Control のアルゴリズム。
     ot: 現在の観測 (traj_real.jsonのステップ全体)
@@ -677,7 +660,6 @@ def MPC(ot: Dict, Rcode: List[Callable], LLM_AGENT: LLMAgent, LLM_WORLD_MODEL: L
     feedback = ""
     sugg = ""
     replan_count = 0
-    predicted_o_t1 = {}
     action_log = {}
 
     # 保存処理 (outdir を使う)
@@ -714,7 +696,7 @@ def MPC(ot: Dict, Rcode: List[Callable], LLM_AGENT: LLMAgent, LLM_WORLD_MODEL: L
         print("==========================MAPEXECUTE[実行]===========================================")
 
         # 6: MAPEXECUTEに渡して結果を得る
-        feedback, sugg, final_flag = MAPEXECUTE(Rcode, flag, feedback, sugg, ot, at, outdir, t_index)
+        feedback, sugg, final_flag = MAPEXECUTE(Rcode, flag, feedback, sugg, ot, at, outdir, t_index, scene_graph)
 
         print(f"[MPC] MAPEXECUTE関数の結果 → Flag: {final_flag}, Feedback: '{feedback}', Suggestion: '{sugg}'")
 
@@ -763,85 +745,3 @@ def MPC(ot: Dict, Rcode: List[Callable], LLM_AGENT: LLMAgent, LLM_WORLD_MODEL: L
         f.write(json.dumps(action_log, indent=4, ensure_ascii=False))
 
     return at
-
-
-if __name__ == "__main__":
-
-    # 環境変数 OPENAI_API_KEY が設定されているか確認
-    if client is None:
-        print("Skipping LLMAgent and LLMWorldModel tests due to OpenAI client initialization failure.")
-    elif not os.getenv("OPENAI_API_KEY"):
-        print("Error: OPENAI_API_KEY environment variable is not set.")
-        print("Please set your OpenAI API key before running the script.")
-    else:
-        print("OpenAI API Key is set. Running MPC with LLMAgent and LLMWorldModel...")
-
-        # エージェントとワールドモデルのインスタンス化
-        agent = LLMAgent(prompt_log_dir="Demo/MPC/agent_prompts_log", action_log_dir="Demo/MPC/agent_actions_log")
-        world_model = LLMWorldModel(prompt_log_dir="Demo/MPC/wm_prompts_log", outcome_log_dir="Demo/MPC/wm_outcomes_log")
-
-        # MPCの結果を保存するディレクトリ
-        mpc_results_dir = "Demo/MPC/mpc_results_log"
-        if not os.path.exists(mpc_results_dir):
-            os.makedirs(mpc_results_dir)
-            print(f"Created directory: {mpc_results_dir}")
-
-        traj_real_file_path = "Demo/buffer_fact/traj_s0.json"
-
-        try:
-            # 1. 実環境データの読み込み．観測値Stの取得．==============================================================================
-            with open(traj_real_file_path, 'r', encoding='utf-8') as f:
-                traj_real_data = json.load(f)
-            
-            # 'state'キーが存在することを確認し、それを ot に設定します
-            if "state" not in traj_real_data:
-                raise ValueError(f"'{traj_real_file_path}' does not contain a 'state' key at the top level.")
-            
-            ot = traj_real_data["state"]
-            print(ot)
-
-            planned_action = {"action_type":" "}
-            t_index = 0
-            
-            while planned_action.get("action_type", "").lower() not in ["done", "do_nothing"] and t_index < 10:
-                Rcode_t = []
-                print(f"\n--- Running MPC for Step {t_index} ---")
-
-                # MPCを実行し、計画されたアクションと予測された次の状態を取得
-                current_planned_action, predicted_next_state = MPC(ot, Rcode_t, agent, world_model)
-
-                print(f"\n--- MPC Result for Step {t_index} ---")
-                print(f"Planned Action: {planned_action}")
-                print(f"Predicted Outcome (Next State): {predicted_next_state}")
-                
-                # 計画されたアクションの保存
-                planned_action_filename = os.path.join(mpc_results_dir, f"mpc_planned_action_step_{t_index}.json")
-                try:
-                    with open(planned_action_filename, "w", encoding="utf-8") as f:
-                        json.dump(current_planned_action, f, indent=4, ensure_ascii=False)
-                    print(f"MPC planned action saved to {planned_action_filename}")
-                except Exception as e:
-                    print(f"Error saving planned action to file: {e}")
-
-                # 予測された次の状態の保存
-                predicted_state_filename = os.path.join(mpc_results_dir, f"mpc_predicted_state_step_{t_index}.json")
-                try:
-                    with open(predicted_state_filename, "w", encoding="utf-8") as f:
-                        json.dump(predicted_next_state, f, indent=4, ensure_ascii=False)
-                    print(f"MPC predicted next state saved to {predicted_state_filename}")
-                except Exception as e:
-                    print(f"Error saving predicted next state to file: {e}")
-                
-                ot = predicted_next_state
-                planned_action = current_planned_action
-                t_index += 1
-            
-                
-        except FileNotFoundError:
-            print(f"Error: The file '{traj_real_file_path}' was not found. Please ensure it's in the same directory.")
-        except json.JSONDecodeError:
-            print(f"Error: Could not decode JSON from '{traj_real_file_path}'. Check file format.")
-        except (IndexError, ValueError) as e:
-            print(f"Error processing traj_real.json: {e}. It might be empty or in an unexpected format (e.g., no task name found).")
-        except Exception as e:
-            print(f"An unexpected error occurred during file processing or action generation: {e}")
