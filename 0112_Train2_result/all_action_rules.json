@@ -1,0 +1,20 @@
+{
+    "verified_rules": [
+        "Rule 98: For action put, the action will fail if the agent is not currently holding any item; Checking Method: Check if state['item_in_hand']['item_name'] is None before the action, and the action result is failure.",
+        "Rule 99: For action put, the action will fail if the agent is not currently at the specified target location; Checking Method: Check if state['current_position']['location_name'] is not equal to action['args']['recep'] before the action, and the action result is failure."
+    ],
+    "conflicting_rules": [],
+    "improved_rules": [],
+    "new_rules": [
+        "Rule 100: For action take, the action will fail if the specified object is not present at the specified location; Checking Method: Check if action['args']['obj'] is not in state['items_in_locations'][action['args']['recep']]['items'] before the action, and the action result is failure.",
+        "Rule 101: For action take, the action will fail if the agent is not currently at the specified location; Checking Method: Check if state['current_position']['location_name'] is not equal to action['args']['recep'] before the action, and the action result is failure.",
+        "Rule 102: For action take, the action will fail if the agent is already holding an item; Checking Method: Check if state['item_in_hand']['item_name'] is not None before the action, and the action result is failure."
+    ],
+    "final_rules": [
+        "Rule 98: For action put, the action will fail if the agent is not currently holding any item; Checking Method: Check if state['item_in_hand']['item_name'] is None before the action, and the action result is failure.",
+        "Rule 99: For action put, the action will fail if the agent is not currently at the specified target location; Checking Method: Check if state['current_position']['location_name'] is not equal to action['args']['recep'] before the action, and the action result is failure.",
+        "Rule 100: For action take, the action will fail if the specified object is not present at the specified location; Checking Method: Check if action['args']['obj'] is not in state['items_in_locations'][action['args']['recep']]['items'] before the action, and the action result is failure.",
+        "Rule 101: For action take, the action will fail if the agent is not currently at the specified location; Checking Method: Check if state['current_position']['location_name'] is not equal to action['args']['recep'] before the action, and the action result is failure.",
+        "Rule 102: For action take, the action will fail if the agent is already holding an item; Checking Method: Check if state['item_in_hand']['item_name'] is not None before the action, and the action result is failure."
+    ]
+}
