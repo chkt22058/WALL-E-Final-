@@ -1,0 +1,14 @@
+[
+  {
+    "name": "is_reachable",
+    "description": "The location can be navigated to directly from the current position.",
+    "parent": "",
+    "exclusive_with": ["is_unreachable"]
+  },
+  {
+    "name": "is_unreachable",
+    "description": "The location cannot be navigated to directly from the current position.",
+    "parent": "",
+    "exclusive_with": ["is_reachable"]
+  }
+]
